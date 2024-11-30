@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/app/auth';
+import { db, auth } from '@/app/auth';
 
 export default function AuthPage() {
     const router = useRouter();
@@ -21,11 +22,28 @@ export default function AuthPage() {
                 await signInWithEmailAndPassword(auth, email, password);
             } else {
                 // Create a new user
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Storing the user in Firestore
+                await setDoc(doc(db, 'users', user.uid), {
+                    email: user.email,
+                    tasks: [], // Store an empty array for now
+                    userId: user.uid,
+                    role: 'user', // Default role
+                    createdAt: new Date(),
+                });
             }
             router.push('/tasks'); // Redirect to tasks page on success
         } catch (err) {
             setError('Error: ' + err.message);
+
+            // Rollback: Delete user from Firebase Authentication if Firestore save fails
+            if (auth.currentUser) {
+                await auth.currentUser.delete(); // This deletes the user from Firebase Auth
+            }
+
+            alert('User registration failed. Please try again.');
         }
     };
 
