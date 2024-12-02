@@ -18,6 +18,8 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
     const [redoStack, setRedoStack] = useState<Annotation[][]>([]);
     const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
 
+    const [tempRectangle, setTempRectangle] = useState<Annotation | null>(null);
+
     useEffect(() => {
         // if (!imageURL || !canvasRef.current) return;
 
@@ -53,42 +55,74 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
         });
     };
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const getCoordinates = (
+        event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+        canvas: HTMLCanvasElement
+    ): { x: number; y: number } => {
+        const rect = canvas.getBoundingClientRect();
+
+        if ('touches' in event) {
+            // Handle touch events
+            const touch = event.touches[0]; // Get the first touch point
+            return {
+                x: touch?.clientX - rect.left,
+                y: touch?.clientY - rect.top,
+            };
+        } else {
+            // Handle mouse events
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+            };
+        }
+    };
+
+    const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
-        setStartPoint({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        });
+        const isTouch = 'touches' in e; // Check if it's a touch event
+        const { x, y } = isTouch
+            ? getCoordinates(e as React.TouchEvent<HTMLCanvasElement>, canvas)
+            : getCoordinates(e as React.MouseEvent<HTMLCanvasElement>, canvas);
+
+        setStartPoint({ x, y });
         setIsDrawing(true);
     };
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handleMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (!isDrawing || !startPoint) return;
 
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
-
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+
+        const isTouch = 'touches' in e; // Check if it's a touch event
+        const { x, y } = isTouch
+            ? getCoordinates(e as React.TouchEvent<HTMLCanvasElement>, canvas)
+            : getCoordinates(e as React.MouseEvent<HTMLCanvasElement>, canvas);
 
         // Redraw the image and existing rectangles
         const img = new Image();
         img.src = imageURL;
+
         img.onload = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
             redrawRectangles(ctx);
 
-            // Draw the current rectangle
-            const width = currentX - startPoint.x;
-            const height = currentY - startPoint.y;
+            const width = x - startPoint.x;
+            const height = y - startPoint.y;
+
+            setTempRectangle({
+                x: startPoint.x,
+                y: startPoint.y,
+                width,
+                height,
+                text: '',
+            });
 
             ctx.beginPath();
             ctx.rect(startPoint.x, startPoint.y, width, height);
@@ -98,15 +132,11 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
         };
     };
 
-    const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handleEnd = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (!isDrawing || !startPoint) return;
 
         const canvas = canvasRef.current;
         if (!canvas) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const endX = e.clientX - rect.left;
-        const endY = e.clientY - rect.top;
 
         let text: string;
         do {
@@ -121,15 +151,13 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
             }
         } while (text.trim() === '');
 
-        let newRectangle: Annotation = {
-            x: startPoint.x,
-            y: startPoint.y,
-            width: endX - startPoint.x,
-            height: endY - startPoint.y,
+        const newRectangle: Annotation = {
+            ...tempRectangle,
             text,
         };
 
         setNewAnnotations((prev) => [...prev, newRectangle]);
+        setTempRectangle(null);
         setRedoStack([]); // Clear redo stack on new action
         setIsDrawing(false);
         setStartPoint(null);
@@ -158,15 +186,20 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
     };
 
     return (
-        <div>
+        <div className="relative w-full max-w-md mx-auto">
             <h2>Annotate Image</h2>
             {imageURL ? (
                 <>
                     <canvas
                         ref={canvasRef}
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
+                        width={800}
+                        height={600}
+                        onMouseDown={handleStart}
+                        onMouseMove={handleMove}
+                        onMouseUp={handleEnd}
+                        onTouchStart={handleStart}
+                        onTouchMove={handleMove}
+                        onTouchEnd={handleEnd}
                         style={{ border: '1px solid black', cursor: 'crosshair' }}
                     ></canvas>
                     <div style={{ marginTop: '10px' }}>
