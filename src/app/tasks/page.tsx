@@ -7,6 +7,7 @@ import { auth, db } from '../auth';
 import useSWR from 'swr';
 import { onAuthStateChanged } from 'firebase/auth';
 import TaskCard from '../components/TaskCard';
+import Link from 'next/link';
 
 const fetchTasks = async (userId: string) => {
     const tasksCollection = collection(db, 'tasks');
@@ -50,6 +51,16 @@ const TasksPage = () => {
     return (
         <div className="min-h-screen bg-gray-100 py-10">
             <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Your Tasks</h1>
+
+            {/* Navigation Link to Assign Task Page */}
+            <div className="flex justify-center mb-6">
+                <Link
+                    href="/tasks/assign"
+                    className="absolute top-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                    Assign New Task
+                </Link>
+            </div>
 
             {/* Filter Dropdown */}
             <div className="flex justify-center mb-6">
