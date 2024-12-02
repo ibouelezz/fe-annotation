@@ -1,24 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { auth, db } from '@/app/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import useAppStore, { Task } from '@/app/state';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { auth, db } from '../auth';
 import useSWR from 'swr';
 import { onAuthStateChanged } from 'firebase/auth';
-import ImageAnnotator from '../components/ImageAnnotator';
+import TaskCard from '../components/TaskCard';
 
-// Type definitions for Task
-interface Task {
-    taskId: string;
-    imageURL: string;
-    assignedTo: string;
-}
-
-// SWR fetcher using Firebase SDK
 const fetchTasks = async (userId: string) => {
-    const tasksRef = collection(db, 'tasks');
-    const q = query(tasksRef, where('assignedTo', '==', userId));
+    const tasksCollection = collection(db, 'tasks');
+    const q = query(tasksCollection, where('assignedTo', '==', userId));
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.docs.map((doc) => ({
@@ -28,69 +20,62 @@ const fetchTasks = async (userId: string) => {
 };
 
 const TasksPage = () => {
-    const router = useRouter();
-    const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(null);
+    const { tasks, setTasks } = useAppStore();
     const [userId, setUserId] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
-    // Monitor Firebase Auth state
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUserId(user.uid); // Set logged-in user ID
-            } else {
-                setUserId(null);
-                router.push('/login'); // Redirect if not logged in
-            }
+            if (user) setUserId(user.uid);
+            else setUserId(null);
         });
 
         return () => unsubscribe();
-    }, [router]);
+    }, []);
 
-    // Use SWR to fetch tasks
-    const { data: tasks, error, isLoading } = useSWR(userId ? userId : null, fetchTasks);
+    const { error, isLoading } = useSWR(userId ? userId : null, () => fetchTasks(userId || ''), {
+        onSuccess: (fetchedTasks) => {
+            console.log({ userId, fetchedTasks });
+            setTasks(fetchedTasks);
+            // updateAnnotations(fetchedTasks[currentTaskIndex]?.annotations || []);
+        },
+    });
 
-    if (isLoading) return <p>Loading tasks...</p>;
-    if (error) return <p>Failed to load tasks: {error.message}</p>;
+    if (!tasks || tasks.length === 0) {
+        return <p className="text-center mt-10 text-gray-500">No tasks assigned yet.</p>;
+    }
 
-    const handleNext = () => {
-        if (currentTaskIndex < tasks.length - 1) {
-            setCurrentTaskIndex(currentTaskIndex + 1);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentTaskIndex > 0) {
-            setCurrentTaskIndex(currentTaskIndex - 1);
-        }
-    };
-
-    const currentTask = tasks && tasks[currentTaskIndex];
+    const filteredTasks = statusFilter === 'all' ? tasks : tasks.filter((task) => task.status === statusFilter);
 
     return (
-        <div>
-            {tasks?.length === 0 ? (
-                <div>
-                    <p>No tasks assigned. Please assign a task.</p>
-                    {/* <button onClick={() => router.push('/tasks/assign')}>Go to Assign Task</button> */}
-                </div>
-            ) : (
-                <>
-                    <h1>
-                        Task {currentTaskIndex + 1} of {tasks?.length}
-                    </h1>
-                    <div>
-                        {/* <img src={currentTask.imageURL} alt="Task" width="600" /> */}
-                        <ImageAnnotator imageURL={currentTask?.imageURL} taskId={currentTask?.taskId} />
-                    </div>
-                    <button onClick={handlePrevious} disabled={currentTaskIndex === 0}>
-                        Previous
-                    </button>
-                    <button onClick={handleNext} disabled={currentTaskIndex === tasks?.length - 1}>
-                        Next
-                    </button>
-                </>
-            )}
-            <button onClick={() => router.push('/tasks/assign')}>Go to Assign Task</button>
+        <div className="min-h-screen bg-gray-100 py-10">
+            <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Your Tasks</h1>
+
+            {/* Filter Dropdown */}
+            <div className="flex justify-center mb-6">
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-white border border-gray-300 text-gray-800 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="all">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-6 px-6">
+                {filteredTasks.map((task) => (
+                    <TaskCard
+                        key={task.taskId}
+                        imageURL={task.imageURL}
+                        taskId={task.taskId}
+                        status={task.status}
+                        createdAt={task.createdAt}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
