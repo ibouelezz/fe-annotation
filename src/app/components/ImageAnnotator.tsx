@@ -89,6 +89,7 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
             // Draw the current rectangle
             const width = currentX - startPoint.x;
             const height = currentY - startPoint.y;
+
             ctx.beginPath();
             ctx.rect(startPoint.x, startPoint.y, width, height);
             ctx.lineWidth = 2;
@@ -107,39 +108,31 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
         const endX = e.clientX - rect.left;
         const endY = e.clientY - rect.top;
 
-        const newRectangle: Annotation = {
+        let text: string;
+        do {
+            text = prompt('Your text:');
+
+            if (text === null) {
+                alert('Text is required for annotations. The last shape will be removed.');
+                setIsDrawing(false);
+                setStartPoint(null);
+                setNewAnnotations((prev) => [...prev]);
+                return;
+            }
+        } while (text.trim() === '');
+
+        let newRectangle: Annotation = {
             x: startPoint.x,
             y: startPoint.y,
             width: endX - startPoint.x,
             height: endY - startPoint.y,
-            text: prompt('Enter annotation text:', ''),
+            text,
         };
 
-        if (!newAnnotations?.length) {
-            console.log('first annotation');
-            setUndoStack(newAnnotations);
-            // setRedoStack([]); // Clear redo stack on new action
-            setNewAnnotations([newRectangle]);
-            // setIsDrawing(false);
-            // setStartPoint(null);
-        } else {
-            console.log('further annotations');
-            setUndoStack((prev) => [...prev, newAnnotations]); // Save current state to undo stack
-            // setRedoStack([]); // Clear redo stack on new action
-            setNewAnnotations((prev) => [...prev, newRectangle]);
-            // setIsDrawing(false);
-            // setStartPoint(null);
-        }
-
+        setNewAnnotations((prev) => [...prev, newRectangle]);
         setRedoStack([]); // Clear redo stack on new action
         setIsDrawing(false);
         setStartPoint(null);
-
-        // setUndoStack((prev) => [...prev, newAnnotations]); // Save current state to undo stack
-        // setRedoStack([]); // Clear redo stack on new action
-        // setNewAnnotations((prev) => [...prev, newRectangle]);
-        // setIsDrawing(false);
-        // setStartPoint(null);
     };
 
     const undo = () => {
