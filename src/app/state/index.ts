@@ -26,10 +26,12 @@ export interface Task {
 interface AppState {
     users: User[]; // All users
     tasks: Task[]; // All tasks
+    incompleteTaskIds: string[];
     currentTaskIndex: number; // Index of the current task
     currentAnnotations: Annotation[]; // Annotations for the current task
     setTasks: (tasks: Task[]) => void; // Set all tasks
     getTaskById: (taskId: string) => Task | undefined; // Selector for task by taskId
+    getNextIncompleteTask: (currentTaskId: string) => string | null;
     setCurrentTaskIndex: (index: number) => void; // Change task index
     // setCurrentAnnotations: any;
     updateAnnotations: (annotations: Annotation[]) => void; // Update current annotations
@@ -40,7 +42,14 @@ const useAppStore = create<AppState>((set, get) => ({
     tasks: [],
     currentTaskIndex: 0,
     currentAnnotations: [],
-    setTasks: (tasks) => set(() => ({ tasks })),
+    incompleteTaskIds: [],
+    // setTasks: (tasks) => set(() => ({ tasks })),
+    setTasks: (tasks) =>
+        set(() => ({
+            tasks,
+            incompleteTaskIds: tasks.filter((task) => task.taskId !== 'completed').map((task) => task.taskId),
+        })),
+    getNextIncompleteTask: (currentTaskId) => get().incompleteTaskIds.find((id) => id !== currentTaskId) || null,
     getTaskById: (taskId) => {
         return get().tasks.find((task) => task.taskId === taskId);
     },
