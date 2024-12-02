@@ -1,29 +1,25 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Annotation, Task } from '../state';
 
 interface ImageAnnotatorProps {
-    imageURL: string; // URL of the image to be annotated
-    taskId: string; // ID of the task associated with the annotation
+    task: Task;
+    newAnnotations: Annotation[];
+    setNewAnnotations;
 }
 
-interface Rectangle {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
+    const { imageURL } = task;
 
-const ImageAnnotator = ({ imageURL, taskId }: ImageAnnotatorProps) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [rectangles, setRectangles] = useState<Rectangle[]>([]);
-    const [undoStack, setUndoStack] = useState<Rectangle[][]>([]);
-    const [redoStack, setRedoStack] = useState<Rectangle[][]>([]);
+    const [undoStack, setUndoStack] = useState<Annotation[][]>([]);
+    const [redoStack, setRedoStack] = useState<Annotation[][]>([]);
     const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
-        if (!imageURL || !canvasRef.current) return;
+        // if (!imageURL || !canvasRef.current) return;
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -35,21 +31,25 @@ const ImageAnnotator = ({ imageURL, taskId }: ImageAnnotatorProps) => {
             canvas.height = img.height;
             ctx?.drawImage(img, 0, 0);
 
-            // Redraw rectangles
             redrawRectangles(ctx);
         };
-    }, [imageURL, rectangles]);
+    }, [imageURL, newAnnotations]);
 
     const redrawRectangles = (ctx: CanvasRenderingContext2D | null) => {
         if (!ctx) return;
 
         // Redraw rectangles
-        rectangles.forEach((rect) => {
+        newAnnotations?.forEach((rect) => {
             ctx.beginPath();
             ctx.rect(rect.x, rect.y, rect.width, rect.height);
             ctx.lineWidth = 2;
             ctx.strokeStyle = 'red';
             ctx.stroke();
+
+            // Draw the text above the rectangle
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.fillText(rect.text, rect.x + 5, rect.y - 5); // Place text above the rectangle
         });
     };
 
@@ -107,18 +107,39 @@ const ImageAnnotator = ({ imageURL, taskId }: ImageAnnotatorProps) => {
         const endX = e.clientX - rect.left;
         const endY = e.clientY - rect.top;
 
-        const newRectangle: Rectangle = {
+        const newRectangle: Annotation = {
             x: startPoint.x,
             y: startPoint.y,
             width: endX - startPoint.x,
             height: endY - startPoint.y,
+            text: prompt('Enter annotation text:', ''),
         };
 
-        setUndoStack((prev) => [...prev, rectangles]); // Save current state to undo stack
+        if (!newAnnotations?.length) {
+            console.log('first annotation');
+            setUndoStack(newAnnotations);
+            // setRedoStack([]); // Clear redo stack on new action
+            setNewAnnotations([newRectangle]);
+            // setIsDrawing(false);
+            // setStartPoint(null);
+        } else {
+            console.log('further annotations');
+            setUndoStack((prev) => [...prev, newAnnotations]); // Save current state to undo stack
+            // setRedoStack([]); // Clear redo stack on new action
+            setNewAnnotations((prev) => [...prev, newRectangle]);
+            // setIsDrawing(false);
+            // setStartPoint(null);
+        }
+
         setRedoStack([]); // Clear redo stack on new action
-        setRectangles((prev) => [...prev, newRectangle]);
         setIsDrawing(false);
         setStartPoint(null);
+
+        // setUndoStack((prev) => [...prev, newAnnotations]); // Save current state to undo stack
+        // setRedoStack([]); // Clear redo stack on new action
+        // setNewAnnotations((prev) => [...prev, newRectangle]);
+        // setIsDrawing(false);
+        // setStartPoint(null);
     };
 
     const undo = () => {
@@ -126,9 +147,9 @@ const ImageAnnotator = ({ imageURL, taskId }: ImageAnnotatorProps) => {
 
         const previousState = undoStack.pop();
         if (previousState) {
-            setRedoStack((prev) => [...prev, rectangles]); // Save current state to redo stack
-            setRectangles(previousState);
+            setRedoStack((prev) => [...prev, newAnnotations]); // Save current state to redo stack
             setUndoStack([...undoStack]); // Update the undo stack
+            setNewAnnotations(previousState);
         }
     };
 
@@ -137,9 +158,9 @@ const ImageAnnotator = ({ imageURL, taskId }: ImageAnnotatorProps) => {
 
         const nextState = redoStack.pop();
         if (nextState) {
-            setUndoStack((prev) => [...prev, rectangles]); // Save current state to undo stack
-            setRectangles(nextState);
+            setUndoStack((prev) => [...prev, newAnnotations]); // Save current state to undo stack
             setRedoStack([...redoStack]); // Update the redo stack
+            setNewAnnotations(nextState);
         }
     };
 
