@@ -1,3 +1,4 @@
+import { Timestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -10,34 +11,48 @@ const TaskCard = ({
     imageURL: string;
     taskId: string;
     status: string;
-    createdAt: string;
+    createdAt: Timestamp;
 }) => {
     return (
         <Link href={`/tasks/${taskId}`}>
-            {/* <Link href={{ pathname: `/tasks/${taskId}`, query: { annotations: JSON.stringify(annotations) } }}> */}
-            <div className="bg-white shadow-md rounded-lg overflow-hidden border w-64 cursor-pointer hover:shadow-lg">
-                <div className="relative aspect-w-16 aspect-h-9">
+            <div className="bg-white shadow-md rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg w-full max-w-sm mx-auto">
+                {/* Image Section */}
+                <div className="relative w-full aspect-w-16 aspect-h-9">
                     <Image
                         src={imageURL}
                         alt={`Task ${taskId}`}
-                        width={256}
-                        height={144}
+                        width={320}
+                        height={150}
                         className="object-cover"
                         priority={status === 'Pending'}
+                        sizes="(max-width: 768px) 100vw, 50vw"
                     />
                 </div>
+
+                {/* Content Section */}
                 <div className="p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-lg font-bold text-gray-800">id: </h2>
+                        <p className="text-sm text-gray-600">
+                            {new Date(createdAt.seconds * 1000).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </p>
                         <span
                             className={`text-sm px-3 py-1 rounded-full ${
-                                status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                status === 'completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : status === 'in-progress'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-yellow-100 text-yellow-800'
                             }`}
                         >
                             {status}
                         </span>
                     </div>
-                    <p className="text-sm text-gray-600">Created at: </p>
                 </div>
             </div>
         </Link>

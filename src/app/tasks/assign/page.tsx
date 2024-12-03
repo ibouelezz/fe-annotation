@@ -46,7 +46,7 @@ const AssignTaskPage = () => {
             try {
                 const options = {
                     maxSizeMB: 1, // Max size in MB
-                    maxWidthOrHeight: 450, // Max dimensions
+                    maxWidthOrHeight: 560, // Max dimensions
                     useWebWorker: true, // Use Web Worker for better performance
                 };
                 const compressedFile = await imageCompression(originalFile, options);

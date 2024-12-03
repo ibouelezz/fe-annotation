@@ -63,7 +63,7 @@ const TasksPage = () => {
             </div>
 
             {/* Filter Dropdown */}
-            <div className="flex justify-center mb-6">
+            <div className="absolute top-6 left-6">
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
