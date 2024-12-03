@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { db, auth } from '@/app/auth';
 
@@ -13,6 +13,15 @@ export default function AuthPage() {
     const [error, setError] = useState('');
     // Toggle between login and signup form
     const [isLogin, setIsLogin] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            // Redirect if authenticated
+            if (user) router.push('/tasks');
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

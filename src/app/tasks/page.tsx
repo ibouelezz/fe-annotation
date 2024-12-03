@@ -8,6 +8,7 @@ import useSWR from 'swr';
 import { onAuthStateChanged } from 'firebase/auth';
 import TaskCard from '../components/TaskCard';
 import Link from 'next/link';
+import FloatingLogoutButton from '../components/Logout';
 
 const fetchTasks = async (userId: string) => {
     const tasksCollection = collection(db, 'tasks');
@@ -34,16 +35,30 @@ const TasksPage = () => {
         return () => unsubscribe();
     }, []);
 
-    const { error, isLoading } = useSWR(userId ? userId : null, () => fetchTasks(userId || ''), {
+    const { error, isLoading } = useSWR(userId, () => fetchTasks(userId), {
         onSuccess: (fetchedTasks) => {
-            console.log({ userId, fetchedTasks });
             setTasks(fetchedTasks);
-            // updateAnnotations(fetchedTasks[currentTaskIndex]?.annotations || []);
         },
     });
 
+    if (isLoading) return <p className="text-center mt-10 text-gray-500">Loading...</p>;
+    if (error) return <p className="text-center mt-10 text-gray-500">Failed to fetch tasks.</p>;
+
     if (!tasks || tasks.length === 0) {
-        return <p className="text-center mt-10 text-gray-500">No tasks assigned yet.</p>;
+        return (
+            <>
+                <p className="text-center mt-10 text-gray-500">No tasks assigned yet.</p>
+                <div className="flex justify-center mb-6">
+                    <Link
+                        href="/tasks/assign"
+                        className="m-4 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                        Assign New Task
+                    </Link>
+                </div>
+                <FloatingLogoutButton />
+            </>
+        );
     }
 
     const filteredTasks = statusFilter === 'all' ? tasks : tasks.filter((task) => task.status === statusFilter);
@@ -87,6 +102,8 @@ const TasksPage = () => {
                     />
                 ))}
             </div>
+
+            <FloatingLogoutButton />
         </div>
     );
 };
