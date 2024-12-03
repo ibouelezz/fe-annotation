@@ -143,7 +143,7 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
             text = prompt('Your text:');
 
             if (text === null) {
-                alert('Text is required for annotations. The last shape will be removed.');
+                // alert('Text is required for annotations. The last shape will be removed.');
                 setIsDrawing(false);
                 setStartPoint(null);
                 setNewAnnotations((prev) => [...prev]);
@@ -186,33 +186,50 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
     };
 
     return (
-        <div className="relative w-full max-w-md mx-auto">
-            <h2>Annotate Image</h2>
+        <div className="relative flex justify-center items-center bg-gray-100 p-6 h-max">
             {imageURL ? (
                 <>
-                    <canvas
-                        ref={canvasRef}
-                        width={800}
-                        height={600}
-                        onMouseDown={handleStart}
-                        onMouseMove={handleMove}
-                        onMouseUp={handleEnd}
-                        onTouchStart={handleStart}
-                        onTouchMove={handleMove}
-                        onTouchEnd={handleEnd}
-                        style={{ border: '1px solid black', cursor: 'crosshair' }}
-                    ></canvas>
-                    <div style={{ marginTop: '10px' }}>
-                        <button onClick={undo} disabled={undoStack.length === 0}>
+                    <div className="relative overflow-hidden border border-gray-300 rounded-md">
+                        <canvas
+                            ref={canvasRef}
+                            width={800}
+                            height={600}
+                            onMouseDown={handleStart}
+                            onMouseMove={handleMove}
+                            onMouseUp={handleEnd}
+                            onTouchStart={handleStart}
+                            onTouchMove={handleMove}
+                            onTouchEnd={handleEnd}
+                            className="w-full h-full bg-gray-50 cursor-crosshair"
+                        ></canvas>
+                    </div>
+                    <div className="flex flex-col gap-4 absolute bottom-6 left-6">
+                        <button
+                            onClick={undo}
+                            disabled={undoStack.length === 0}
+                            className={`px-4 py-2 rounded-md shadow-sm ${
+                                undoStack.length === 0
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none'
+                            }`}
+                        >
                             Undo
                         </button>
-                        <button onClick={redo} disabled={redoStack.length === 0}>
+                        <button
+                            onClick={redo}
+                            disabled={redoStack.length === 0}
+                            className={`px-4 py-2 rounded-md shadow-sm ${
+                                redoStack.length === 0
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none'
+                            }`}
+                        >
                             Redo
                         </button>
                     </div>
                 </>
             ) : (
-                <p>Loading image...</p>
+                <p className="text-center text-gray-500">Loading image...</p>
             )}
         </div>
     );
