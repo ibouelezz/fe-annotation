@@ -5,6 +5,7 @@ import { db, storage } from '@/app/auth';
 import { doc, getDocs, setDoc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
+import imageCompression from 'browser-image-compression';
 
 interface User {
     uid: string;
@@ -37,9 +38,24 @@ const AssignTaskPage = () => {
         fetchUsers();
     }, []);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file input and compress the file
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
-            setFile(e.target.files[0]);
+            const originalFile = e.target.files[0];
+
+            try {
+                const options = {
+                    maxSizeMB: 1, // Max size in MB
+                    maxWidthOrHeight: 450, // Max dimensions
+                    useWebWorker: true, // Use Web Worker for better performance
+                };
+                const compressedFile = await imageCompression(originalFile, options);
+                console.log('Original size:', originalFile.size / 1024, 'KB');
+                console.log('Compressed size:', compressedFile.size / 1024, 'KB');
+                setFile(compressedFile);
+            } catch (error) {
+                setError('Failed to compress image. Please try again.');
+            }
         }
     };
 
