@@ -30,7 +30,6 @@ export default function AuthPage() {
                     email: user.email,
                     tasks: [], // Store an empty array for now
                     userId: user.uid,
-                    role: 'user', // Default role
                     createdAt: new Date(),
                 });
             }
@@ -48,29 +47,57 @@ export default function AuthPage() {
     };
 
     return (
-        <div>
-            <h1>{isLogin ? 'Login' : 'Sign Up'}</h1>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                {error && <p>{error}</p>}
-                <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
-            </form>
-            <button onClick={() => setIsLogin(!isLogin)}>
-                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
-            </button>
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center py-10">
+            <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
+                <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">{isLogin ? 'Login' : 'Sign Up'}</h1>
+
+                {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white py-2 rounded-md shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                        {isLogin ? 'Login' : 'Sign Up'}
+                    </button>
+                </form>
+
+                <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="mt-4 w-full text-sm text-blue-600 hover:underline focus:outline-none text-center"
+                >
+                    {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
+                </button>
+            </div>
         </div>
     );
 }
