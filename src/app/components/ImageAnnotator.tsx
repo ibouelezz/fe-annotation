@@ -158,6 +158,7 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
 
         setNewAnnotations((prev) => [...prev, newRectangle]);
         setTempRectangle(null);
+        setUndoStack((prev) => [...prev, newAnnotations]);
         setRedoStack([]); // Clear redo stack on new action
         setIsDrawing(false);
         setStartPoint(null);
