@@ -21,7 +21,7 @@ export default function AuthPage() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

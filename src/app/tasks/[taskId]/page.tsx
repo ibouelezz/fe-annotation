@@ -3,7 +3,7 @@
 import { db } from '@/app/auth';
 import ImageAnnotator from '@/app/components/ImageAnnotator';
 import useAppStore, { Annotation, Task } from '@/app/state';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { redirect, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';

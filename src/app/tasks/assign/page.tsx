@@ -6,6 +6,7 @@ import { doc, getDocs, setDoc, collection, updateDoc, arrayUnion } from 'firebas
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import imageCompression from 'browser-image-compression';
+import Link from 'next/link';
 
 interface User {
     uid: string;
@@ -32,7 +33,8 @@ const AssignTaskPage = () => {
                 })) as User[];
                 setUsers(usersData);
             } catch (err) {
-                setError('Failed to load users. Please try again.');
+                alert('Failed to load users. Please try again.');
+                setError(err);
             }
         };
         fetchUsers();
@@ -54,7 +56,8 @@ const AssignTaskPage = () => {
                 console.log('Compressed size:', compressedFile.size / 1024, 'KB');
                 setFile(compressedFile);
             } catch (error) {
-                setError('Failed to compress image. Please try again.');
+                alert('Failed to compress image. Please try again.');
+                setError(error);
             }
         }
     };
@@ -70,9 +73,9 @@ const AssignTaskPage = () => {
             uploadTask.on(
                 'state_changed',
                 null,
-                (error) => {
+                () => {
                     setUploading(false);
-                    setError('File upload failed. Please try again.');
+                    alert('File upload failed. Please try again.');
                 },
                 async () => {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -80,7 +83,8 @@ const AssignTaskPage = () => {
                 }
             );
         } catch (error) {
-            setError('Error uploading file. Please try again.');
+            alert('Error uploading file. Please try again.');
+            setError(error);
             setUploading(false);
         }
     };
@@ -105,7 +109,8 @@ const AssignTaskPage = () => {
             });
             router.push('/tasks');
         } catch (error) {
-            setError('Error assigning task. Please try again.');
+            alert('Error assigning task. Please try again.');
+            setError(error);
         } finally {
             setUploading(false);
         }
@@ -119,12 +124,12 @@ const AssignTaskPage = () => {
     return (
         <div className="min-h-screen bg-gray-100 py-10 relative">
             {/* Back Button */}
-            <a
+            <Link
                 href="/tasks"
                 className="absolute top-6 left-6 bg-gray-200 text-gray-800 px-4 py-2 rounded-md shadow-sm hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
             >
                 ← Back to Tasks
-            </a>
+            </Link>
 
             <div className="flex items-center justify-center">
                 <div className="bg-white shadow-lg rounded-lg p-6 max-w-lg w-full">

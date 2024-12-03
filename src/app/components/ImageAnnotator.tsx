@@ -1,13 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Annotation, Task } from '../state';
-
-interface ImageAnnotatorProps {
-    task: Task;
-    newAnnotations: Annotation[];
-    setNewAnnotations;
-}
+import { Annotation } from '../state';
 
 const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
     const { imageURL } = task;
@@ -35,6 +29,7 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
 
             redrawRectangles(ctx);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [imageURL, newAnnotations]);
 
     const redrawRectangles = (ctx: CanvasRenderingContext2D | null) => {
@@ -132,7 +127,7 @@ const ImageAnnotator = ({ task, newAnnotations, setNewAnnotations }) => {
         };
     };
 
-    const handleEnd = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const handleEnd = () => {
         if (!isDrawing || !startPoint) return;
 
         const canvas = canvasRef.current;
