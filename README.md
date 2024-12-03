@@ -108,16 +108,21 @@ src/
 
 ### **Assumptions Made**
 
-1. User can assign tasks to themselves or other users through `/tasks/assign`.
+1. Users can assign tasks to themselves or other users through `/tasks/assign`.
 2. Files uploaded by users are scoped to their user ID for security.
 3. Tasks are marked as "completed" when all annotations are finalized.
+4. It was not clear at what time the task should be "in progress".
+5. Renamed `annotation` inside `annotations` object to be `text`.
+6. Add further helpful fields such as `createdAt`, we can use it to sort tasks.
 
 ---
 
 ### **Future Improvements**
 
 1. **Enhanced UI**:
+
     - Implement a good design for better look and feel.
+
 2. **Real-Time Updates**:
 
     - Integrate Firestore listeners for real-time task updates.
@@ -127,7 +132,23 @@ src/
     - Show detailed error messages for Firebase operations.
 
 4. **Mobile Experience**:
+
     - Optimize the UI further for small-screen devices.
+
+5. **Optimize Performance**:
+
+    - Implement caching or improve fetchers configuration.
+
+6. **Pagination**:
+
+    - It can enhance performance and give an overall better UX.
+
+7. **Consistent Image Size**:
+
+    - Enforce dimensions or implement croppers to have consistent sizing across the app.
+
+8. **Testing**:
+    - I would have added testing of course, but was short on time.
 
 ---
 
