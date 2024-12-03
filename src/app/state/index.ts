@@ -27,6 +27,7 @@ interface AppState {
     users: User[]; // All users
     tasks: Task[]; // All tasks
     incompleteTaskIds: string[];
+    nextIncompleteTaskId: string;
     currentTaskIndex: number; // Index of the current task
     currentAnnotations: Annotation[]; // Annotations for the current task
     setTasks: (tasks: Task[]) => void; // Set all tasks
@@ -41,10 +42,11 @@ const useAppStore = create<AppState>((set, get) => ({
     currentTaskIndex: 0,
     currentAnnotations: [],
     incompleteTaskIds: [],
+    nextIncompleteTaskId: null,
     setTasks: (tasks) =>
         set(() => ({
             tasks,
-            incompleteTaskIds: tasks.filter((task) => task.taskId !== 'completed').map((task) => task.taskId),
+            incompleteTaskIds: tasks.filter((task) => task.status !== 'completed').map((task) => task.taskId),
         })),
     getTaskById: (taskId) => {
         return get().tasks.find((task) => task.taskId === taskId) || null;
@@ -56,10 +58,26 @@ const useAppStore = create<AppState>((set, get) => ({
         })),
     updateTaskAnnotations: (taskId, annotations) =>
         set((state) => {
-            let updatedTask = state.tasks.find((task) => task.taskId === taskId);
-            updatedTask.annotations = annotations;
-            updatedTask.status = 'completed';
-            return { currentAnnotations: updatedTask.annotations };
+            const updatedTasks = state.tasks.map((task) => {
+                if (task.taskId === taskId) {
+                    return {
+                        ...task,
+                        annotations: annotations,
+                        status: 'completed',
+                    };
+                }
+                return task;
+            });
+
+            const incompleteTaskIds = updatedTasks
+                .filter((task) => task.status !== 'completed')
+                .map((task) => task.taskId);
+
+            return {
+                incompleteTaskIds,
+                tasks: updatedTasks,
+                currentAnnotations: annotations,
+            };
         }),
 }));
 

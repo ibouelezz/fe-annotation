@@ -31,13 +31,12 @@ import { useEffect, useState } from 'react';
 const TaskPage = () => {
     const { taskId } = useParams();
     const { getTaskById, incompleteTaskIds, updateTaskAnnotations } = useAppStore();
-    const nextTaskId = incompleteTaskIds && incompleteTaskIds.pop();
+    const nextTaskIds = incompleteTaskIds.filter((id) => taskId !== id);
 
     const [task, setTask] = useState<Task>(null);
     const [newAnnotations, setNewAnnotations] = useState<Array<Annotation>>([]);
 
     useEffect(() => {
-        console.log({ taskId });
         if (taskId) {
             const taskData = getTaskById(taskId as string); // Fetch the task by taskId
             // TODO: because this fetches task from local state, /tasks needs to be hit first
@@ -90,9 +89,9 @@ const TaskPage = () => {
             </div>
 
             {/* Next Button */}
-            {nextTaskId && (
+            {nextTaskIds.length ? (
                 <div className="absolute bottom-6 right-6">
-                    <Link href={`/tasks/${nextTaskId}`}>
+                    <Link href={`/tasks/${nextTaskIds.pop()}`}>
                         <button
                             onClick={saveAnnotations}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -101,10 +100,7 @@ const TaskPage = () => {
                         </button>
                     </Link>
                 </div>
-            )}
-
-            {/* Save Button */}
-            {!nextTaskId && (
+            ) : (
                 <div className="absolute bottom-6 right-6">
                     <button
                         onClick={async () => await saveAnnotations().then(() => redirect('/tasks'))}
