@@ -31,10 +31,8 @@ interface AppState {
     currentAnnotations: Annotation[]; // Annotations for the current task
     setTasks: (tasks: Task[]) => void; // Set all tasks
     getTaskById: (taskId: string) => Task | undefined; // Selector for task by taskId
-    getNextIncompleteTask: (currentTaskId: string) => string | null;
     setCurrentTaskIndex: (index: number) => void; // Change task index
-    // setCurrentAnnotations: any;
-    updateAnnotations: (annotations: Annotation[]) => void; // Update current annotations
+    updateTaskAnnotations: (taskId: string, annotations: Annotation[]) => void; // Update current annotations
 }
 
 const useAppStore = create<AppState>((set, get) => ({
@@ -43,26 +41,25 @@ const useAppStore = create<AppState>((set, get) => ({
     currentTaskIndex: 0,
     currentAnnotations: [],
     incompleteTaskIds: [],
-    // setTasks: (tasks) => set(() => ({ tasks })),
     setTasks: (tasks) =>
         set(() => ({
             tasks,
             incompleteTaskIds: tasks.filter((task) => task.taskId !== 'completed').map((task) => task.taskId),
         })),
-    getNextIncompleteTask: (currentTaskId) => get().incompleteTaskIds.find((id) => id !== currentTaskId) || null,
     getTaskById: (taskId) => {
-        return get().tasks.find((task) => task.taskId === taskId);
+        return get().tasks.find((task) => task.taskId === taskId) || null;
     },
     setCurrentTaskIndex: (index) =>
         set((state) => ({
             currentTaskIndex: index,
             currentAnnotations: state.tasks[index]?.annotations || [],
         })),
-    updateAnnotations: (annotations) =>
+    updateTaskAnnotations: (taskId, annotations) =>
         set((state) => {
-            const updatedTasks = [...state.tasks];
-            updatedTasks[state.currentTaskIndex].annotations = annotations;
-            return { tasks: updatedTasks, currentAnnotations: annotations };
+            let updatedTask = state.tasks.find((task) => task.taskId === taskId);
+            updatedTask.annotations = annotations;
+            updatedTask.status = 'completed';
+            return { currentAnnotations: updatedTask.annotations };
         }),
 }));
 
