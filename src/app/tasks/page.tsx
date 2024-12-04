@@ -10,6 +10,7 @@ import TaskCard from '../components/TaskCard';
 import Link from 'next/link';
 import FloatingLogoutButton from '../components/Logout';
 import FloatingProgressBar from '../components/Progress';
+import { redirect } from 'next/navigation';
 
 const fetchTasks = async (userId: string) => {
     const tasksCollection = collection(db, 'tasks');
@@ -30,7 +31,10 @@ const TasksPage = () => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) setUserId(user.uid);
-            else setUserId(null);
+            else {
+                setUserId(null);
+                redirect('/login');
+            }
         });
 
         return () => unsubscribe();
